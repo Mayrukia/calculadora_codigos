@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-right: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 50%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>EK</h1>
+    <input type="file" id="fileInput">
+    <button id="calculateButton">Calcular</button>
+    <button id="downloadButton" disabled>Descargar Resultados</button> <!-- Botón de descarga deshabilitado inicialmente -->
+    <h2>Resultados:</h2>
+    <table id="outputTable">
+        <thead>
+            <tr>
+                <th>Entrada</th>
+                <th>Resultado</th>
+            </tr>
+        </thead>
+        <tbody id="outputBody"></tbody>
+    </table>
+    
+
+    <script>
+        document.getElementById("calculateButton").addEventListener("click", function () {
+            var fileInput = document.getElementById("fileInput");
+            var file = fileInput.files[0];
+
+            if (file) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    var contents = e.target.result;
+                    var inputLines = contents.split("\n");
+                    var roundedNumbers = calculateRoundedValues(inputLines);
+                    displayResults(inputLines, roundedNumbers);
+                    createDownloadLink(inputLines, roundedNumbers); // Llamada para crear el enlace de descarga
+                };
+
+                reader.readAsText(file);
+            }
+        });
+
+        function calculateRoundedValues(numbers) {
+            var roundedNumbers = [];
+            for (var i = 0; i < numbers.length; i++) {
+                var number = parseFloat(numbers[i]);
+                var roundedValue = roundToCustomMultiples(number);
+                roundedNumbers.push(roundedValue);
+            }
+            return roundedNumbers;
+        }
+
+        function roundToCustomMultiples(number) {
+
+
+            var baseValue = Math.floor(number / 100) * 100;
+            
+            if (number < 1000) {
+                if (number % 100 <= 50) {
+                    return baseValue + 50;
+                }else
+                    return Math.round(number / 20) * 20;
+            }
+
+            if (number > 3000) {
+                if (number % 100 <= 50) {
+                    return baseValue + 50;
+                }else if (number % 100 <= 90) {
+                    return baseValue + 90;
+                }
+            }
+            
+            if ((number > 1000) && (number < 3000)){
+                if (number % 100 <= 25) {
+                    return baseValue;
+                } else if (number % 100 <= 50) {
+                     return baseValue + 50;
+                 } else if (number % 100 <= 60) {
+                     return baseValue + 60;
+                 } else if (number % 100 <= 80) {
+                      return baseValue + 80;
+                } else if (number % 100 <= 90) {
+                    return baseValue + 90;
+                } else {
+                    return Math.ceil(number / 100) * 100;
+                }       
+            }            
+        }
+
+        function displayResults(inputs, results) {
+            var outputBody = document.getElementById("outputBody");
+            outputBody.innerHTML = "";
+            
+            for (var i = 0; i < inputs.length; i++) {
+                var row = document.createElement("tr");
+                var inputCell = document.createElement("td");
+                var resultCell = document.createElement("td");
+                inputCell.textContent = inputs[i];
+                resultCell.textContent = results[i];
+                row.appendChild(inputCell);
+                row.appendChild(resultCell);
+                outputBody.appendChild(row);
+            }
+        }
+
+        function createDownloadLink(inputs, results) {
+            var downloadButton = document.getElementById("downloadButton");
+            downloadButton.disabled = false; // Habilita el botón de descarga
+
+            downloadButton.addEventListener("click", function () {
+                var content = "Resultado\n"; // Encabezado del archivo CSV
+
+                for (var i = 0; i < inputs.length; i++) {
+                    content += results[i] + "\n";
+                }
+
+                var blob = new Blob([content], { type: "text/csv" });
+                var url = URL.createObjectURL(blob);
+
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = "resultados.csv"; // Nombre del archivo de descarga
+                a.click();
+
+                // Liberar recursos después de la descarga
+                setTimeout(function () {
+                    URL.revokeObjectURL(url);
+                }, 0);
+            });
+        }
+    </script>
+</body>
+</html>
